@@ -1,0 +1,14 @@
+{
+  "album": {
+    "title": "The Art of Nikolai Golovanov Volume I",
+    "label": "Arlecchino",
+    "catalog": "ARL 32",
+    "media": "CD",
+    "total_discs": 1
+  },
+  "discs": {
+    "1": {
+      "total_tracks": 5
+    }
+  }
+}
