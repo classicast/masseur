@@ -24,6 +24,7 @@ CREATE TABLE label (
 );
 
 CREATE TABLE albums_labels (
+  id            SERIAL PRIMARY KEY,
   fk_album_id   INTEGER REFERENCES album(id) NOT NULL,
   fk_label_id   INTEGER REFERENCES label(id) NOT NULL,
   catalog       TEXT
