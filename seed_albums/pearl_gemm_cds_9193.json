@@ -1,0 +1,18 @@
+{
+  "album": {
+    "title": "Etelka Freund",
+    "label": "Pearl",
+    "catalog": "GEMM CDS 9193",
+    "release_date": "1996-05-21",
+    "media": "CD",
+    "total_discs": 2
+  },
+  "discs": {
+    "1": {
+      "total_tracks": 35
+    },
+    "2": {
+      "total_tracks": 24
+    }
+  }
+}

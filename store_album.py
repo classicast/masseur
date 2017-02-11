@@ -2,55 +2,29 @@
 # python3 store_album.py
 
 import psycopg2
+import json
+import sys
 
 conn = psycopg2.connect('dbname=classicast user=postgres')
 cur = conn.cursor()
 
-# TODO: parse json file to get this
-# album_info = {
-#   "album": {
-#     "title": "The Art of Nikolai Golovanov Volume I",
-#     "label": "Arlecchino",
-#     "catalog": "ARL 32",
-#     "media": "CD",
-#     "total_discs": 1
-#   },
-#   "discs": {
-#     "1": {
-#       "total_tracks": 5
-#     }
-#   }
-# }
+# get filename from CLI
+filename = sys.argv[1]
 
-album_info = {
-  "album": {
-    "title": "Etelka Freund",
-    "label": "Pearl",
-    "catalog": "GEMM CDS 9193",
-    "release_date": "1996-05-21",
-    "media": "CD",
-    "total_discs": 2
-  },
-  "discs": {
-    "1": {
-      "total_tracks": 35
-    },
-    "2": {
-      "total_tracks": 24
-    }
-  }
-}
+# load JSON from file
+with open(filename) as data_file:
+    data = json.load(data_file)
 
 # Add label information
 #######################
 # if label already exists, get label id, otherwise insert and get label id
 cur.execute("SELECT id FROM label WHERE name = %s",
-    (album_info['album']['label'],))
+    (data['album']['label'],))
 try:
     label_id = cur.fetchone()[0]
 except TypeError:
     cur.execute("INSERT INTO label (name) VALUES (%s) RETURNING id",
-        (album_info['album']['label'],))
+        (data['album']['label'],))
     label_id = cur.fetchone()[0]
 # print(label_id)
 
@@ -62,14 +36,14 @@ except TypeError:
 # label + catalog
 # label + name + release_date (if catalog is missing)
 # label + name (if catalog AND release_date are both missing)
-if 'catalog' in album_info['album']:
+if 'catalog' in data['album']:
     cur.execute("""
         SELECT a.id FROM album a
         JOIN albums_labels a_l
         ON a.id = a_l.fk_album_id
         WHERE a_l.catalog = %s
-    """, (album_info['album']['catalog'],))
-elif 'release_date' in album_info['album']:
+    """, (data['album']['catalog'],))
+elif 'release_date' in data['album']:
     # TODO: query to identify album by label + name + release_date
     pass
 else:
@@ -83,14 +57,14 @@ except:
         INSERT INTO album (title, total_discs, media) VALUES (%s, %s, %s)
         RETURNING id
     """, (
-        album_info['album']['title'],
-        album_info['album']['total_discs'],
-        album_info['album']['media']
+        data['album']['title'],
+        data['album']['total_discs'],
+        data['album']['media']
     ))
     album_id = cur.fetchone()[0]
     # Insert optional release_date field
-    if 'release_date' in album_info['album']:
-        # TODO: parse the release_date in album_info to determine accuracy
+    if 'release_date' in data['album']:
+        # TODO: parse the release_date in data to determine accuracy
         # (year, month, day)
         # TODO: create a time object from the release_date field in YYYY-MM-DD
         # format
@@ -99,13 +73,14 @@ except:
     cur.execute("""
         INSERT INTO albums_labels (fk_album_id, fk_label_id, catalog)
         VALUES (%s, %s, %s)
-    """, (album_id, label_id, album_info['album']['catalog']))
+    """, (album_id, label_id, data['album']['catalog']))
 # print(album_id)
 
 # Add discs
+# TODO: make this dependent on the album being new, and not already in the system
 ########################
-total_discs = album_info['album']['total_discs']
-discs = album_info['discs']
+total_discs = data['album']['total_discs']
+discs = data['discs']
 for disc_num in range(1, total_discs+1):
     total_tracks = discs[str(disc_num)]['total_tracks']
     cur.execute("""
