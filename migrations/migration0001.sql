@@ -61,10 +61,10 @@ CREATE TABLE movement (
 );
 
 CREATE TABLE recording (
-  id              SERIAL PRIMARY KEY,
-  type            TEXT,
-  date            DATE,
-  date_accuracy   DATE_ACCURACY,
+  id                        SERIAL PRIMARY KEY,
+  type                      TEXT,
+  recording_date            DATE,
+  recording_date_accuracy   DATE_ACCURACY,
   -- enforce that, to enter a date, a date_accuracy value must also be specified
   CHECK ( date IS NULL or date_accuracy IS NOT NULL)
 );
@@ -86,13 +86,13 @@ CREATE TABLE track (
 
 CREATE TABLE person (
   id              SERIAL PRIMARY KEY,
-  name_last       TEXT,
-  name_first_plus TEXT
+  name_last       TEXT NOT NULL,
+  name_first_plus TEXT NOT NULL
 );
 
 CREATE TABLE person_role (
   id    SERIAL PRIMARY KEY,
-  type  TEXT
+  type  TEXT NOT NULL
 );
 
 CREATE TABLE compositions_persons (

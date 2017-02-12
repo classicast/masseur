@@ -14,6 +14,12 @@ This service is responsible for injesting new albums and tracks that will be use
 3. `brew install python3`
 4. `PATH=$PATH:/Applications/Postgres.app/Contents/Versions/latest/bin pip3 install psycopg2`
 
+
+### Schema (v1.0.0):
+[Schema Table/Column Details](https://docs.google.com/spreadsheets/d/1FxQLvizvrmzBYEUtPd0RtNt8k5xHa1u3jWsfpLUrx-A/edit?usp=sharing)
+
+![ClassiCast Schema Diagram](docs/schema-v1.0.0.png)
+
 ### FEATURES TODO:
 - finish 'store_album.py' python script so I can upload a complete album release based solely on its JSON representation
 
