@@ -27,7 +27,9 @@ CREATE TABLE albums_labels (
   id            SERIAL PRIMARY KEY,
   fk_album_id   INTEGER REFERENCES album(id) NOT NULL,
   fk_label_id   INTEGER REFERENCES label(id) NOT NULL,
-  catalog       TEXT
+  catalog       TEXT,
+  UNIQUE (fk_album_id, fk_label_id),
+  UNIQUE (fk_label_id, catalog)
 );
 
 CREATE TABLE disc (
@@ -66,7 +68,7 @@ CREATE TABLE recording (
   recording_date            DATE,
   recording_date_accuracy   DATE_ACCURACY,
   -- enforce that, to enter a date, a date_accuracy value must also be specified
-  CHECK ( date IS NULL or date_accuracy IS NOT NULL)
+  CHECK ( recording_date IS NULL or recording_date_accuracy IS NOT NULL)
 );
 
 CREATE TABLE recordings_movements (
