@@ -142,7 +142,7 @@ def is_album_new(data, cursor):
 def process_album(data, cursor):
     label_id = add_label_and_get_id(data, cursor)
     album_id = add_album_and_get_id(data, label_id, cursor)
-    # add_discs(data, album_id, cursor)
+    add_discs(data, album_id, cursor)
 
 
 def add_label_and_get_id(data, cursor):
@@ -183,10 +183,19 @@ def add_album_and_get_id(data, label_id, cursor):
         INSERT INTO albums_labels (fk_album_id, fk_label_id, catalog)
         VALUES (%s, %s, %s)
     """, (album_id, label_id, data['album']['catalog']))
+    return album_id
 
 
 def add_discs(data, album_id, cursor):
-    pass
+    """add discs to DB"""
+    total_discs = data['album']['total_discs']
+    discs = data['discs']
+    for disc_num in range(1, total_discs+1):
+        total_tracks = discs[str(disc_num)]['total_tracks']
+        cursor.execute("""
+            INSERT INTO disc (fk_album_id, disc_num, total_tracks)
+            VALUES (%s, %s, %s)
+        """, (album_id, disc_num, total_tracks))
 
 
 def main():
@@ -196,33 +205,24 @@ def main():
 
     data = parse_data_from_file()
 
-    if is_album_new(data, cursor):
-        process_album(data, cursor)
-    else:
-        print('This album already exists in the system!' +
-              ' Please edit the existing data.')
+    try:
+        if is_album_new(data, cursor):
+            process_album(data, cursor)
 
-    # Make the changes to the database persistent
-    connection.commit()
+            # Make the changes to the database persistent
+            connection.commit()
+        else:
+            print('This album already exists in the system!' +
+                  ' Please edit the existing data.')
+    except:
+        # rollback any changes if error is encountered in the process of adding
+        # album information to the database
+        connection.rollback()
+    finally:
+        # Close communication with the database
+        cursor.close()
+        connection.close()
 
-    # Close communication with the database
-    cursor.close()
-    connection.close()
 
 if __name__ == "__main__":
     main()
-
-
-# # Add discs
-# # TODO: make this dependent on the album being new, and not already in the system
-# ########################
-# total_discs = data['album']['total_discs']
-# discs = data['discs']
-# for disc_num in range(1, total_discs+1):
-#     total_tracks = discs[str(disc_num)]['total_tracks']
-#     cur.execute("""
-#         INSERT INTO disc (fk_album_id, disc_num, total_tracks)
-#         VALUES (%s, %s, %s)
-#     """, (album_id, disc_num, total_tracks))
-
-
