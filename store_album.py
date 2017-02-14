@@ -141,8 +141,7 @@ def is_album_new(data, cursor):
 
 def process_album(data, cursor):
     label_id = add_label_and_get_id(data, cursor)
-    # print(label_id)
-    # album_id = add_album_and_get_id(data, label_id, cursor)
+    album_id = add_album_and_get_id(data, label_id, cursor)
     # add_discs(data, album_id, cursor)
 
 
@@ -161,7 +160,29 @@ def add_label_and_get_id(data, cursor):
 
 
 def add_album_and_get_id(data, label_id, cursor):
-    pass
+    """adds a new album, and returns its ID"""
+
+    # Construct optional release_date and release_date_accuracy values
+    date = None
+    accuracy = None
+    if 'release_date' in data['album']:
+        date, accuracy = construct_date_tuple(data['album']['release_date'])
+    cursor.execute("""
+        INSERT INTO album (title, release_date, release_date_accuracy,
+                           total_discs, media) VALUES (%s, %s, %s, %s, %s)
+        RETURNING id
+    """, (
+        data['album']['title'],
+        date,
+        accuracy,
+        data['album']['total_discs'],
+        data['album']['media']
+    ))
+    album_id = cursor.fetchone()[0]
+    cursor.execute("""
+        INSERT INTO albums_labels (fk_album_id, fk_label_id, catalog)
+        VALUES (%s, %s, %s)
+    """, (album_id, label_id, data['album']['catalog']))
 
 
 def add_discs(data, album_id, cursor):
@@ -178,8 +199,8 @@ def main():
     if is_album_new(data, cursor):
         process_album(data, cursor)
     else:
-        print("""This album already exists in the system! Please edit the
-            existing data.""")
+        print('This album already exists in the system!' +
+              ' Please edit the existing data.')
 
     # Make the changes to the database persistent
     connection.commit()
@@ -191,54 +212,6 @@ def main():
 if __name__ == "__main__":
     main()
 
-
-# # Add album information
-# #######################
-# # If the album already exists, get album id
-# # otherwise insert album, albums_labels, and get album id
-# # Unique identifiers for an album:
-# # label + catalog
-# # label + name + release_date (if catalog is missing)
-# # label + name (if catalog AND release_date are both missing)
-# if 'catalog' in data['album']:
-#     cur.execute("""
-#         SELECT a.id FROM album a
-#         JOIN albums_labels a_l
-#         ON a.id = a_l.fk_album_id
-#         WHERE a_l.catalog = %s
-#     """, (data['album']['catalog'],))
-# elif 'release_date' in data['album']:
-#     # TODO: query to identify album by label + name + release_date
-#     pass
-# else:
-#     # TODO: query to identify album by label + name
-#     pass
-
-# try:
-#     album_id = cur.fetchone()[0]
-# except:
-#     cur.execute("""
-#         INSERT INTO album (title, total_discs, media) VALUES (%s, %s, %s)
-#         RETURNING id
-#     """, (
-#         data['album']['title'],
-#         data['album']['total_discs'],
-#         data['album']['media']
-#     ))
-#     album_id = cur.fetchone()[0]
-#     # Insert optional release_date field
-#     if 'release_date' in data['album']:
-#         # TODO: parse the release_date in data to determine accuracy
-#         # (year, month, day)
-#         # TODO: create a time object from the release_date field in YYYY-MM-DD
-#         # format
-#         # TODO: INSERT release date and precision values into DB
-#         pass
-#     cur.execute("""
-#         INSERT INTO albums_labels (fk_album_id, fk_label_id, catalog)
-#         VALUES (%s, %s, %s)
-#     """, (album_id, label_id, data['album']['catalog']))
-# # print(album_id)
 
 # # Add discs
 # # TODO: make this dependent on the album being new, and not already in the system
