@@ -78,8 +78,7 @@ def is_album_new(data, cursor):
         label name + album title + release_date (if catalog is missing)
         label name + album title (if catalog AND release_date are both missing)
 
-    'Label' is assumed as required.
-    TODO: validate, validate, validate!
+    'Label' is required.
 
     Args:
         data: dictionary of JSON data
@@ -140,13 +139,47 @@ def is_album_new(data, cursor):
     return not bool(cursor.fetchone())
 
 
+def process_album(data, cursor):
+    label_id = add_label_and_get_id(data, cursor)
+    # print(label_id)
+    # album_id = add_album_and_get_id(data, label_id, cursor)
+    # add_discs(data, album_id, cursor)
+
+
+def add_label_and_get_id(data, cursor):
+    """if label already exists, get label id, otherwise insert and get label id
+    """
+    cursor.execute("SELECT id FROM label WHERE name = %s",
+                   (data['album']['label'],))
+    try:
+        label_id = cursor.fetchone()[0]
+    except TypeError:
+        cursor.execute("INSERT INTO label (name) VALUES (%s) RETURNING id",
+                       (data['album']['label'],))
+        label_id = cursor.fetchone()[0]
+    return label_id
+
+
+def add_album_and_get_id(data, label_id, cursor):
+    pass
+
+
+def add_discs(data, album_id, cursor):
+    pass
+
+
 def main():
     # open connection and fetch cursor to database
     connection = psycopg2.connect('dbname=classicast user=postgres')
     cursor = connection.cursor()
 
     data = parse_data_from_file()
-    print(is_album_new(data, cursor))
+
+    if is_album_new(data, cursor):
+        process_album(data, cursor)
+    else:
+        print("""This album already exists in the system! Please edit the
+            existing data.""")
 
     # Make the changes to the database persistent
     connection.commit()
@@ -158,19 +191,6 @@ def main():
 if __name__ == "__main__":
     main()
 
-
-# # Add label information
-# #######################
-# # if label already exists, get label id, otherwise insert and get label id
-# cur.execute("SELECT id FROM label WHERE name = %s",
-#             (data['album']['label'],))
-# try:
-#     label_id = cur.fetchone()[0]
-# except TypeError:
-#     cur.execute("INSERT INTO label (name) VALUES (%s) RETURNING id",
-#                 (data['album']['label'],))
-#     label_id = cur.fetchone()[0]
-# # print(label_id)
 
 # # Add album information
 # #######################
