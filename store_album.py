@@ -6,6 +6,7 @@
 import psycopg2
 import json
 import sys
+from datetime import datetime
 
 
 def parse_data_from_file():
@@ -40,15 +41,32 @@ def construct_date_tuple(fuzzy_date):
             YYYY-MM-DD, YYYY-MM, YYYY
 
     Returns:
-        date + accuracy {tuple(str, str)} -- eg. ('2015-04-28', 2)
+        date + accuracy {tuple(str, str)} -- eg. ('2015-04-28', 'exact date')
             first element is a date string in YYYY-MM-DD format
             second element is a string of the these possible values:
                 "exact date" - year, month, and day are all exact
                 "month" - only year and month are accurate
                 "year" - only year is accurate
     """
-    # TODO: DO IT!
-    pass
+    for char in fuzzy_date:
+        assert(char == '-' or char.isdigit())
+
+    components = fuzzy_date.split('-')
+
+    if len(components) == 3:
+        return (fuzzy_date, 'exact date')
+
+    elif len(components) == 2:
+        return (
+            datetime.strptime(fuzzy_date, '%Y-%m').strftime('%Y-%m-%d'),
+            'month'
+        )
+
+    else:
+        return (
+            datetime.strptime(fuzzy_date, '%Y').strftime('%Y-%m-%d'),
+            'year'
+        )
 
 
 def is_album_new(data, cursor):
