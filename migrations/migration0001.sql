@@ -42,7 +42,8 @@ CREATE TABLE disc (
 CREATE TABLE composition (
   id          SERIAL PRIMARY KEY,
   title       TEXT NOT NULL,
-  total_mvmts INTEGER NOT NULL
+  total_mvmts INTEGER NOT NULL,
+  key         TEXT NOT NULL
 );
 
 CREATE TABLE catalog (

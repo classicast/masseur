@@ -144,11 +144,9 @@ def process_album(data, cursor):
     album_id = add_album_and_get_id(data, label_id, cursor)
     add_discs(data, album_id, cursor)
 
-    add_persons(data, cursor)
+    persons_subm_to_db_id_map = add_persons(data, cursor)
+    add_compositions(data, persons_subm_to_db_id_map, cursor)
 
-    # composition_id = add_composition(data, cursor)
-    # add_catalog(data, composition_id, cursor)
-    # add_movements(data, composition_id, cursor)
     # add_recordings(data, cursor)
     # add_tracks(data, cursor)
 
@@ -208,30 +206,140 @@ def add_discs(data, album_id, cursor):
 
 def add_persons(data, cursor):
     """ Add persons to database """
+    persons_subm_to_db_id_map = {}
     persons = data.get('persons')
-    for key, person in persons.items():
-        add_person(person, cursor)
+    for subm_id, person in persons.items():
+        persons_subm_to_db_id_map[subm_id] = add_person(person, cursor)
+    return persons_subm_to_db_id_map
 
 
 def add_person(person, cursor):
-    """ add person to database. if person already exists, this will fail
-    uniqueness contraint, then just move on. nothing more needs to be done
+    """ get person id, and if not already in DB, add person to the DB
     """
+    cursor.execute("""
+        SELECT id FROM person (name_last, name_first_plus, group_name)
+        WHERE name_last = %s
+        AND name_first_plus = %s
+        AND group_name = %s
+    """, (
+        person.get('name_last'),
+        person.get('name_first_plus'),
+        person.get('group_name'))
+    )
+
     try:
+        person_id = cursor.fetchone()[0]
+    except TypeError:
         cursor.execute("""
             INSERT INTO person (name_last, name_first_plus, group_name)
                  VALUES (%s, %s, %s)
+                 RETURNING id
         """, (
             person.get('name_last'),
             person.get('name_first_plus'),
             person.get('group_name')
         ))
-    except TypeError:
+        person_id = cursor.fetchone()[0]
+    return person_id
+
+
+def add_compositions(data, persons_subm_to_db_id_map, cursor):
+    """ Add compositions to database """
+    compositions = data.get('compositions')
+    for key, composition in compositions.items():
+        add_composition(data, composition, persons_subm_to_db_id_map, cursor)
+
+
+def add_composition(data, composition, persons_subm_to_db_id_map, cursor):
+    """ Add composition to database
+    #
+    # Unhandled cases (for now, at least):
+    #   - Anything that doesn't have enough data to be matched using above
+    #   uniqueness definitions, such as:
+    #       - Anonymous Composers
+    #       - No Title
+    #       - Atonal music that is unpublished without catalog number
+    #       - Derivative works of any kind (where person is not "Composer")
+    """
+    title = composition.get('title')
+    movements = composition.get('movements')
+    total_movements = len(movements) if movements else 1
+
+    # Get composer_db_id
+    # TODO: abstract into separate method
+    # TODO: support more than just "composer" person related to composition,
+    # should also support 'arranger', 'transcriber', etc... (other valid
+    # "composer-like" roles)
+    persons = composition.get('persons')
+    composer_submission_id = next(
+        (p.submission_id for p in persons if p['type'] == 'composer'), None)
+    composer_db_id = persons_subm_to_db_id_map.get(composer_submission_id)
+
+    catalogs = composition.get('catalogs')
+    if catalogs:
+        first_catalog = catalogs[0]
+        catalog_type = first_catalog.get('catalog_type')
+        catalog_num = first_catalog.get('catalog_num')
+        catalog_sub_num = first_catalog.get('catalog_sub_num')
+
+        # Unique Identifier of a Composition
+        # Version 1 - Composition with Catalog Info
+        #     Composition Persons (i.e. Composer(s), Arranger(s), etc.)
+        #     Title
+        #     Total # of Movements
+        #     Catalog (just the first one is enough)
+        cursor.execute("""
+            SELECT (id) from composition as composition
+            JOIN compositions_persons as person
+            ON composition.id = compositions_persons.fk_composition_id
+            JOIN person as person
+            ON person.id = compositions_persons.fk_person_id
+            JOIN person_role as person_role
+            ON person_role.id = compositions_persons.fk_person_role_id
+            JOIN catalog as catalog
+            ON composition.id = fk_composition_id
+            WHERE person_role.type = 'composer'
+            AND person.id = %s
+            AND composition.title = %s
+            AND composition.total_mvmts = %s
+            AND catalog.catalog_type = %s
+            AND catalog.catalog_num = %s
+            AND catalog.catalog_sub_num = %s
+        """, (
+            composer_db_id,
+            title,
+            total_movements,
+            catalog_type,
+            catalog_num,
+            catalog_sub_num)
+        )
+        composition_id = cursor.fetchone()[0]
+
+    else:
+        # Unique Identifier of a Composition
+        # Version 2 - Composition Lacking Catalog Info
+        #     Composition Persons (i.e. Composer(s), Arranger(s), etc.)
+        #     Title
+        #     Total # of Movements
+        #     Key (or mode)
+        #
+        #     Date of Composition (if date range, choose earliest date)
+        #     AND / OR
+        #     First Publication Date (if date range, choose earliest date)
         pass
 
+    # If no composition is found, insert all the data and return the
+    # composition_id
+    #
+    #   insert composition table row, returning composition_id
+    #   for person in persons:
+    #       add_composition_person(data, person, composition_id)
 
-def add_composition(data, cursor):
-    pass
+    #   for catalog in catalogs:
+    #       add_catalog(catalog, composition_id)
+
+    #   for movement in movements:
+    #       add_movement(movement, composition_id)
 
 
 def add_catalog(data, cursor):

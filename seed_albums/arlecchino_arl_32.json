@@ -38,5 +38,42 @@
       "name_last": "Neuhaus",
       "name_first_plus": "Heinrich"
     }
-  }
+  },
+  "compositions": {
+      "0": {
+        "persons": [{ "type": "composer", "submission_id": 0}],
+        "catalogs": [
+          {
+            "catalog_type": "Opus",
+            "catalog_num": "60",
+          },
+        ],
+        "title": "Promethus, the Poem of Fire",
+      },
+      "1": {
+        "persons": [{ "type": "composer", "submission_id": 0}],
+        "catalogs": [
+          {
+            "catalog_type": "Opus",
+            "catalog_num": "54",
+          }
+        ],
+        "title": "The Poem of Ecstasy",
+      },
+      "2": {
+        "persons": [{ "type": "composer", "submission_id": 0}],
+        "catalogs": [
+          {
+            "catalog_type": "Opus",
+            "catalog_num": "20",
+          }
+        ],
+        "title": "Piano Concerto in F sharp minor",
+        "movements": [
+          { "title": "I. Allegro" },
+          { "title": "II. Andante" },
+          { "title": "III. Allegro moderato" },
+        ],
+      }
+    }
 }
