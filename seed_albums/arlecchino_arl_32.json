@@ -10,5 +10,33 @@
     "1": {
       "total_tracks": 5
     }
+  },
+  "persons": {
+    "0": {
+      "name_last": "Scriabin",
+      "name_first_plus": "Alexander"
+    },
+    "1": {
+      "name_last": "Golovanov",
+      "name_first_plus": "Nikolai"
+    },
+    "2": {
+      "group_name": "Moscow Radio Symphony Orchestra"
+    },
+    "3": {
+      "name_last": "Goldenweiser",
+      "name_first_plus": "Alexander"
+    },
+    "4": {
+      "name_last": "Popov",
+      "name_first_plus": "Sergei"
+    },
+    "5": {
+      "group_name": "All-Russia Radio Orchestra"
+    },
+    "6": {
+      "name_last": "Neuhaus",
+      "name_first_plus": "Heinrich"
+    }
   }
 }

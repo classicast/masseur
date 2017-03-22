@@ -144,7 +144,7 @@ def process_album(data, cursor):
     album_id = add_album_and_get_id(data, label_id, cursor)
     add_discs(data, album_id, cursor)
 
-    add_people(data, cursor)
+    add_persons(data, cursor)
 
     # composition_id = add_composition(data, cursor)
     # add_catalog(data, composition_id, cursor)
@@ -206,8 +206,28 @@ def add_discs(data, album_id, cursor):
         """, (album_id, disc_num, total_tracks))
 
 
-def add_people(data, cursor):
-    pass
+def add_persons(data, cursor):
+    """ Add persons to database """
+    persons = data.get('persons')
+    for key, person in persons.items():
+        add_person(person, cursor)
+
+
+def add_person(person, cursor):
+    """ add person to database. if person already exists, this will fail
+    uniqueness contraint, then just move on. nothing more needs to be done
+    """
+    try:
+        cursor.execute("""
+            INSERT INTO person (name_last, name_first_plus, group_name)
+                 VALUES (%s, %s, %s)
+        """, (
+            person.get('name_last'),
+            person.get('name_first_plus'),
+            person.get('group_name')
+        ))
+    except TypeError:
+        pass
 
 
 def add_composition(data, cursor):
@@ -246,10 +266,11 @@ def main():
         else:
             print('This album already exists in the system!' +
                   ' Please edit the existing data.')
-    except:
+    except Exception as exception_instance:
         # rollback any changes if error is encountered in the process of adding
         # album information to the database
         connection.rollback()
+        raise exception_instance
     finally:
         # Close communication with the database
         cursor.close()
