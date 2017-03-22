@@ -88,8 +88,16 @@ CREATE TABLE track (
 
 CREATE TABLE person (
   id              SERIAL PRIMARY KEY,
-  name_last       TEXT NOT NULL,
-  name_first_plus TEXT NOT NULL
+  name_last       TEXT,
+  name_first_plus TEXT,
+  group_name      TEXT,
+  -- enforce that either the name fields are filled out OR the group_name is
+  CHECK ( group_name IS NOT NULL OR
+    (name_last IS NOT NULL AND name_first_plus IS NOT NULL)
+  ),
+  -- enforce that the person is unique
+  -- TODO: disambiguation id for persons with the same name
+  UNIQUE (name_last, name_first_plus, group_name)
 );
 
 CREATE TABLE person_role (
