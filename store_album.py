@@ -144,6 +144,14 @@ def process_album(data, cursor):
     album_id = add_album_and_get_id(data, label_id, cursor)
     add_discs(data, album_id, cursor)
 
+    add_people(data, cursor)
+
+    # composition_id = add_composition(data, cursor)
+    # add_catalog(data, composition_id, cursor)
+    # add_movements(data, composition_id, cursor)
+    # add_recordings(data, cursor)
+    # add_tracks(data, cursor)
+
 
 def add_label_and_get_id(data, cursor):
     """if label already exists, get label id, otherwise insert and get label id
@@ -196,6 +204,30 @@ def add_discs(data, album_id, cursor):
             INSERT INTO disc (fk_album_id, disc_num, total_tracks)
             VALUES (%s, %s, %s)
         """, (album_id, disc_num, total_tracks))
+
+
+def add_people(data, cursor):
+    pass
+
+
+def add_composition(data, cursor):
+    pass
+
+
+def add_catalog(data, cursor):
+    pass
+
+
+def add_movements(data, cursor):
+    pass
+
+
+def add_recordings(data, cursor):
+    pass
+
+
+def add_tracks(data, cursor):
+    pass
 
 
 def main():
